@@ -22,7 +22,7 @@ func New() *Kvika {
 	k := &Kvika{}
 	return k
 }
-func (k *Kvika) Perform(req *Request, callback func(reco *Recorder, buf []byte)) (Events, error) {
+func (k *Kvika) Perform(req *Request, callback func(r *Recorder, buf []byte)) (Events, error) {
 	var err error
 	easy := curl.EasyInit()
 	defer easy.Cleanup()
@@ -101,7 +101,7 @@ const (
 	TotalTime         = "TOTAL_TIME"
 )
 
-func recordCurlInfo(reco *Recorder, easy *curl.CURL) error {
+func recordCurlInfo(r *Recorder, easy *curl.CURL) error {
 	type Entry struct {
 		Info curl.CurlInfo
 		Name string
@@ -138,7 +138,7 @@ func recordCurlInfo(reco *Recorder, easy *curl.CURL) error {
 		if err != nil {
 			return err
 		}
-		reco.recordRaw(t.(float64)*1000.0, entry.Name, nil)
+		r.recordRaw(t.(float64)*1000.0, entry.Name, nil)
 	}
 	return nil
 }
