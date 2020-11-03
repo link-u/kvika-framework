@@ -2,7 +2,7 @@
 
 ## Usage
 
-Please see examples/ directory.
+Please see [examples](./examples/) directory.
 
 # License
 
