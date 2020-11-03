@@ -13,14 +13,18 @@ func main() {
 		Method: "GET",
 		URL:    "https://www.google.com/",
 	}
-	events, err := k.Perform(req, func(r *kvika.Recorder, buf []byte) {
+	resp, err := k.Perform(req, func(r *kvika.Recorder, buf []byte) {
 		r.Record("data-received", fmt.Sprintf("%d bytes", len(buf)))
 	})
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Failed to perform request: %v", err)
 		os.Exit(-1)
 	}
-	for i, ev := range events {
+	if resp.StatusCode != 200 {
+		_, _ = fmt.Fprintf(os.Stderr, "Failed to perform request: status=%v", resp.StatusCode)
+		os.Exit(-1)
+	}
+	for i, ev := range resp.Events {
 		if ev.Payload != nil {
 			fmt.Printf("[%02d/%0.3fms] %s: %v\n", i, ev.At, ev.Name, ev.Payload)
 		} else {

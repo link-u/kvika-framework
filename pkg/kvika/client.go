@@ -18,11 +18,16 @@ type Request struct {
 	Payload []byte
 }
 
+type Response struct {
+	StatusCode int
+	Events     Events
+}
+
 func New() *Kvika {
 	k := &Kvika{}
 	return k
 }
-func (k *Kvika) Perform(req *Request, callback func(r *Recorder, buf []byte)) (Events, error) {
+func (k *Kvika) Perform(req *Request, callback func(r *Recorder, buf []byte)) (*Response, error) {
 	var err error
 	easy := curl.EasyInit()
 	defer easy.Cleanup()
@@ -71,25 +76,33 @@ func (k *Kvika) Perform(req *Request, callback func(r *Recorder, buf []byte)) (E
 			return nil, err
 		}
 	}
-	reco := newRecorder()
+	r := newRecorder()
 	// make a callback function
 	err = easy.Setopt(curl.OPT_WRITEFUNCTION, func(buf []byte, userdata interface{}) bool {
-		callback(reco, buf)
+		callback(r, buf)
 		return true
 	})
 	if err != nil {
 		return nil, err
 	}
-	reco.Start()
+	r.Start()
 	err = easy.Perform()
 	if err != nil {
 		return nil, err
 	}
-	err = recordCurlInfo(reco, easy)
+	err = recordCurlInfo(r, easy)
 	if err != nil {
 		return nil, err
 	}
-	return reco.sortedEvents(), nil
+	respCode, err := easy.Getinfo(curl.INFO_RESPONSE_CODE)
+	if err != nil {
+		return nil, err
+	}
+	resp := &Response{
+		StatusCode: respCode.(int),
+		Events:     r.sortedEvents(),
+	}
+	return resp, nil
 }
 
 const (
