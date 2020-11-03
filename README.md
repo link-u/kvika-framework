@@ -1,4 +1,4 @@
-# Kvika - Web Observing Framework
+# Kvika - Timing Recording Framework for Web
 
 ## Usage
 
