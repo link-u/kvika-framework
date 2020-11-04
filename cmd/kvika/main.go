@@ -26,7 +26,7 @@ var standardLog = kingpin.
 var output = kingpin.
 	Flag("output", "output filename").
 	Short('o').
-	Default("output").
+	Default("").
 	String()
 
 func perform(u *url.URL) {
