@@ -1,5 +1,7 @@
 # Kvika - Timing Recording Framework for Web
 
+[![Build single binary on Linux](https://github.com/link-u/kvika-framework/workflows/Build%20single%20binary%20on%20Linux/badge.svg)](https://github.com/link-u/kvika-framework/actions?query=workflow%3A%22Build+single+binary+on+Linux%22)
+
 ## Usage
 
 Please see [examples](./examples/) directory.
