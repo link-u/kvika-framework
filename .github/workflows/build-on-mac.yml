@@ -16,6 +16,10 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '> 1.15.0'
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install curl-openssl
       - name: Run tests
         run: make test
       - name: Build
