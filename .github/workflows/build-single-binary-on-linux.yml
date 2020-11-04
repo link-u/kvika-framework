@@ -34,10 +34,9 @@ jobs:
           else
             echo "Statically linked!"
           fi
-
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Create release
