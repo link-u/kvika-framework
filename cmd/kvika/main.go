@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/url"
 	"os"
 
 	"github.com/link-u/kvika-framework/pkg/kvika"
@@ -21,8 +23,49 @@ var standardLog = kingpin.
 	Default("false").
 	Bool()
 
-func perform() {
+var output = kingpin.
+	Flag("output", "output filename").
+	Short('o').
+	Default("output").
+	String()
 
+func perform(u *url.URL) {
+	log := zap.L()
+	k := kvika.New()
+	req := &kvika.Request{
+		Method: "GET",
+		URL:    u,
+	}
+	resp, err := k.Perform(req, func(r *kvika.Recorder, buf []byte) {
+		r.Record("data-received", buf)
+	})
+	if err != nil {
+		log.Fatal("Failed to perform request", zap.String("url", req.URL.String()), zap.Error(err))
+		os.Exit(-1)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatal("Failed to perform request",
+			zap.String("url", req.URL.String()), zap.Int("status-code", resp.StatusCode),
+			zap.Error(err))
+		os.Exit(-1)
+	}
+	for i, ev := range resp.Events {
+		switch p := ev.Payload.(type) {
+		case []byte:
+			fmt.Printf("[% 3d/%0.3fms] %s: %v\n", i, ev.At, ev.Name, fmt.Sprintf("%d bytes", len(p)))
+			if len(*output) > 0 {
+				filename := fmt.Sprintf("%s.%03d", *output, i)
+				err := ioutil.WriteFile(filename, p, 0644)
+				if err != nil {
+					log.Fatal("Failed to write file", zap.String("file-name", filename), zap.Error(err))
+					os.Exit(-1)
+				}
+			}
+		default:
+			fmt.Printf("[% 3d/%0.3fms] %s\n", i, ev.At, ev.Name)
+			break
+		}
+	}
 }
 
 func main() {
@@ -47,29 +90,5 @@ func main() {
 	undo := zap.ReplaceGlobals(log)
 	defer undo()
 
-	k := kvika.New()
-	req := &kvika.Request{
-		Method: "GET",
-		URL:    *urlArg,
-	}
-	resp, err := k.Perform(req, func(r *kvika.Recorder, buf []byte) {
-		r.Record("data-received", fmt.Sprintf("%d bytes", len(buf)))
-	})
-	if err != nil {
-		log.Fatal("Failed to perform request", zap.String("url", req.URL.String()), zap.Error(err))
-		os.Exit(-1)
-	}
-	if resp.StatusCode != 200 {
-		log.Fatal("Failed to perform request",
-			zap.String("url", req.URL.String()), zap.Int("status-code", resp.StatusCode),
-			zap.Error(err))
-		os.Exit(-1)
-	}
-	for i, ev := range resp.Events {
-		if ev.Payload != nil {
-			fmt.Printf("[%02d/%0.3fms] %s: %v\n", i, ev.At, ev.Name, ev.Payload)
-		} else {
-			fmt.Printf("[%02d/%0.3fms] %s\n", i, ev.At, ev.Name)
-		}
-	}
+	perform(*urlArg)
 }
