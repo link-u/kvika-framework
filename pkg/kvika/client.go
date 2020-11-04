@@ -2,20 +2,12 @@ package kvika
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
 	curl "github.com/andelf/go-curl"
 )
 
 type Kvika struct {
-}
-
-type Request struct {
-	Method  string
-	URL     string
-	Headers http.Header
-	Payload []byte
 }
 
 type Response struct {
@@ -27,12 +19,13 @@ func New() *Kvika {
 	k := &Kvika{}
 	return k
 }
+
 func (k *Kvika) Perform(req *Request, callback func(r *Recorder, buf []byte)) (*Response, error) {
 	var err error
 	easy := curl.EasyInit()
 	defer easy.Cleanup()
 
-	err = easy.Setopt(curl.OPT_URL, req.URL)
+	err = easy.Setopt(curl.OPT_URL, req.URL.String())
 
 	{ // set headers
 		allHeaders := make([]string, 0)
