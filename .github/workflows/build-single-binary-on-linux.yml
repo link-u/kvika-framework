@@ -1,0 +1,35 @@
+name: Build single binary on Linux
+
+on:
+  push:
+    branches-ignore:
+      - dependabot/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: |
+          docker build -t kvika -f cmd/kvika/Dockerfile .
+          mkdir -p artifacts
+          docker run --rm -v "${PWD}:/artifacts" --entrypoint '' kvika cp /kvika /artifacts/kvika
+      - name: Upload result
+        uses: actions/upload-artifact@v2
+        with:
+          name: kvika
+          path: kvika
+      - name: Show ldd
+        shell: bash
+        run: |
+          if ldd kvika; then
+            echo "Dynamically linked!"
+            false
+          else
+            echo "Statically linked!"
+          fi
+
